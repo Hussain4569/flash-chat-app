@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.flash_chat.app-mergeDebugResources-9:/values-v16/values-v16.xml",
+            "outputFile": "com.example.flash_chat.app-mergeDebugResources-13:/values-v16/values-v16.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Hp\\.gradle\\caches\\transforms-3\\7e9df2ac2213a6bd3cef0f2f27870d79\\transformed\\core-1.6.0\\res\\values-v16\\values-v16.xml",
