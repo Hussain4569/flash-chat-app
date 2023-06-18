@@ -5,6 +5,7 @@ import 'package:flash_chat/constants.dart';
 import 'package:flash_chat/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String id = 'login_screen';
@@ -31,11 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Hero(
-                tag: 'logo',
-                child: Container(
-                  height: 200.0,
-                  child: Image.asset('images/logo.png'),
+              Flexible(
+                child: Hero(
+                  tag: 'logo',
+                  child: Container(
+                    height: 200.0,
+                    child: Image.asset('images/logo.png'),
+                  ),
                 ),
               ),
               const SizedBox(
@@ -74,10 +77,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   setState(() {
                     isLoading = true;
                   });
-                  final user = await _auth.signInWithEmailAndPassword(
-                      email: email, password: password);
-                  if (user != null) {
-                    Navigator.pushNamed(context, ChatScreen.id);
+                  try {
+                    final user = await _auth.signInWithEmailAndPassword(
+                        email: email, password: password);
+                    if (user != null) {
+                      Navigator.pushNamed(context, ChatScreen.id);
+                    }
+                  } catch (e) {
+                    print(e);
+                    Alert(
+                            context: context,
+                            title: "Alert",
+                            desc: "An error occurred please try again")
+                        .show();
                   }
                   setState(() {
                     isLoading = false;
