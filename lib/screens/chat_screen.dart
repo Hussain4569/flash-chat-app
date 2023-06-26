@@ -1,8 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flash_chat/model/CustomerProvider.dart';
 import 'package:flash_chat/screens/change_password_screen.dart';
+import 'package:flash_chat/screens/customer_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
+import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
+import 'package:provider/provider.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 FirebaseAuth _auth = FirebaseAuth.instance;
 FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -18,6 +23,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   String messageText = '';
   TextEditingController messageController = TextEditingController();
+  bool isLoading = false;
 
   Future<void> getCurrentUser() async {
     try {
@@ -65,51 +71,72 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text('⚡️Chat'),
         backgroundColor: Colors.lightBlueAccent,
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
+      drawer: ModalProgressHUD(
+        inAsyncCall: isLoading,
+        child: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                ),
+                child: Text(
+                  '⚡ Flash chat',
+                  style: TextStyle(fontSize: 30.0, color: Colors.white),
+                ),
               ),
-              child: Text(
-                '⚡ Flash chat',
-                style: TextStyle(fontSize: 30.0, color: Colors.white),
+              ListTile(
+                title: const Text(
+                  'Change password',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+                onTap: () {
+                  Navigator.pushNamed(context, PasswordScreen.id);
+                },
               ),
-            ),
-            ListTile(
-              title: const Text(
-                'Change password',
-                style: TextStyle(fontSize: 20.0),
+              ListTile(
+                title: const Text(
+                  'Sign out',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+                onTap: () async {
+                  await _auth.signOut();
+                  int count = 0;
+                  Navigator.of(context).popUntil((_) => count++ >= 2);
+                },
               ),
-              onTap: () {
-                Navigator.pushNamed(context, PasswordScreen.id);
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Sign out',
-                style: TextStyle(fontSize: 20.0),
+              ListTile(
+                title: const Text(
+                  'Delete account',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+                onTap: () async {
+                  await loggedInUser?.delete();
+                  int count = 0;
+                  Navigator.of(context).popUntil((_) => count++ >= 2);
+                },
               ),
-              onTap: () async {
-                await _auth.signOut();
-                int count = 0;
-                Navigator.of(context).popUntil((_) => count++ >= 2);
-              },
-            ),
-            ListTile(
-              title: const Text(
-                'Delete account',
-                style: TextStyle(fontSize: 20.0),
+              ListTile(
+                title: const Text(
+                  'Customer',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+                onTap: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  print("on tap reached.");
+                  await Provider.of<CustomerProvider>(context, listen: false)
+                      .createCustomersList(context);
+                  setState(() {
+                    isLoading = false;
+                  });
+                  Navigator.pushNamed(context, CustomerList.id);
+                },
               ),
-              onTap: () async {
-                await loggedInUser?.delete();
-                int count = 0;
-                Navigator.of(context).popUntil((_) => count++ >= 2);
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: SafeArea(
@@ -156,10 +183,30 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class MesssagesStream extends StatelessWidget {
+class MesssagesStream extends StatefulWidget {
   const MesssagesStream({
     super.key,
   });
+
+  @override
+  State<MesssagesStream> createState() => _MesssagesStreamState();
+}
+
+class _MesssagesStreamState extends State<MesssagesStream> {
+  ScrollController scrollController = ScrollController();
+  List<MessageBubble> messageBubbles = [];
+
+  void _scrollListener() {
+    if (scrollController.position.pixels ==
+        scrollController.position.minScrollExtent) {
+    } else {}
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(_scrollListener);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,13 +217,12 @@ class MesssagesStream extends StatelessWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return Center(
+          return const Center(
             child: CircularProgressIndicator(
               color: Colors.blueAccent,
             ),
           );
         }
-        List<MessageBubble> messageBubbles = [];
         final messages = snapshot.data!.docs;
         for (var msg in messages) {
           final msgText = msg.data()['text'];
@@ -188,7 +234,11 @@ class MesssagesStream extends StatelessWidget {
           ));
         }
         return Expanded(
-          child: ListView(reverse: true, children: messageBubbles),
+          child: ListView(
+            controller: scrollController,
+            reverse: true,
+            children: messageBubbles,
+          ),
         );
       },
     );

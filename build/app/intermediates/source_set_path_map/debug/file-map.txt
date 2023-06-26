@@ -17,3 +17,4 @@ com.example.flash_chat.app-merged_res-15 C:\Users\Hp\Desktop\Flutter\flash_chat\
 com.example.flash_chat.app-packaged_res-16 C:\Users\Hp\Desktop\Flutter\flash_chat\build\cloud_firestore\intermediates\packaged_res\debug
 com.example.flash_chat.app-packaged_res-17 C:\Users\Hp\Desktop\Flutter\flash_chat\build\firebase_auth\intermediates\packaged_res\debug
 com.example.flash_chat.app-packaged_res-18 C:\Users\Hp\Desktop\Flutter\flash_chat\build\firebase_core\intermediates\packaged_res\debug
+com.example.flash_chat.app-packaged_res-19 C:\Users\Hp\Desktop\Flutter\flash_chat\build\modal_progress_hud_nsn\intermediates\packaged_res\debug
