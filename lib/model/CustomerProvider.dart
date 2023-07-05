@@ -9,9 +9,71 @@ final firestore = FirebaseFirestore.instance;
 
 class CustomerProvider extends ChangeNotifier {
   List<Customer> customers = [];
+  List<Customer> originalCopy = [];
+  bool isLoading = false, hasMore = true, firstFetched = false;
+  var lastVisible;
+  int docLimit = 10;
 
-  Future<void> createCustomersList(BuildContext context) async {
+  void toggleIsLoading() {
+    isLoading = !isLoading;
+    notifyListeners();
+  }
+
+  void getNextData() {
+    if (!hasMore) {
+      print('No More Items');
+      return;
+    }
+    toggleIsLoading();
+    var query = !firstFetched
+        ? firestore.collection('customers').orderBy("firstName").limit(docLimit)
+        : firestore
+            .collection('customers')
+            .orderBy("firstName")
+            .startAfter([lastVisible['firstName']]).limit(docLimit);
+    if (!firstFetched) firstFetched = true;
+    query.get().then(
+      (documentSnapshots) {
+        // Get the last visible document
+        lastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+
+        //add documents to the list
+        customers.addAll(documentSnapshots.docs.map((e) {
+          return Customer(
+            id: e.id,
+            firstName: e['firstName'],
+            lastName: e['lastName'],
+            fullName: e['firstName'] + ' ' + e['lastName'],
+            email: e['email'],
+            dob: e['dob'].toDate(),
+            salary: e['salary'],
+          );
+        }).toList());
+        originalCopy.addAll(documentSnapshots.docs.map((e) {
+          return Customer(
+            id: e.id,
+            firstName: e['firstName'],
+            lastName: e['lastName'],
+            fullName: e['firstName'] + ' ' + e['lastName'],
+            email: e['email'],
+            dob: e['dob'].toDate(),
+            salary: e['salary'],
+          );
+        }).toList());
+        notifyListeners();
+        if (documentSnapshots.docs.length <= docLimit) {
+          hasMore = false;
+        }
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+    toggleIsLoading();
+  }
+
+  Future<void> createCustomersList() async {
     customers = [];
+    originalCopy = [];
+    toggleIsLoading();
     await firestore.collection("customers").get().then((querySnapshot) {
       for (var docSnapshot in querySnapshot.docs) {
         var data = docSnapshot.data();
@@ -22,17 +84,22 @@ class CustomerProvider extends ChangeNotifier {
             id: docSnapshot.id,
             firstName: data['firstName'],
             lastName: data['lastName'],
+            fullName: data['firstName'] + ' ' + data['lastName'],
             email: data['email'],
-            DOB: data['dob'].toDate(),
+            dob: data['dob'].toDate(),
             salary: data['salary'],
           ),
         );
       }
+      originalCopy.addAll(customers);
+      toggleIsLoading();
     }, onError: (e) => print(e));
+    notifyListeners();
   }
 
   Future<void> addCustomer(String fN, String lN, String email, DateTime dob,
       int salary, BuildContext context) async {
+    toggleIsLoading();
     var docRef = await firestore.collection('customers').add({
       'firstName': fN,
       'lastName': lN,
@@ -44,50 +111,107 @@ class CustomerProvider extends ChangeNotifier {
         id: docRef.id,
         firstName: fN,
         lastName: lN,
+        fullName: '$fN $lN',
         email: email,
-        DOB: dob,
+        dob: dob,
         salary: salary));
+    toggleIsLoading();
     notifyListeners();
   }
 
   Future<void> updateCustomer(Customer customer, BuildContext context) async {
+    toggleIsLoading();
     await firestore.collection('customers').doc(customer.id).update({
       'firstName': customer.firstName,
       'lastName': customer.lastName,
       'email': customer.email,
-      'dob': customer.DOB,
+      'dob': customer.dob,
       'salary': customer.salary
     });
     int idx = customers.indexWhere((element) => element.id == customer.id);
     customers[idx] = customer;
+    toggleIsLoading();
     notifyListeners();
   }
 
   Future<void> deleteCustomer(Customer customer, BuildContext context) async {
+    toggleIsLoading();
     await firestore.collection('customers').doc(customer.id).delete();
     customers
         .removeAt(customers.indexWhere((element) => element.id == customer.id));
+    toggleIsLoading();
     notifyListeners();
   }
 
-  void showErrorDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Alert"),
-          content: const Text(
-              "An error occurred while connecting to the internet. Please check your iternet connection and try again."),
-          actions: [
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
+  void sortList({required String label, bool asc = false}) {
+    if (asc) {
+      if (label == "First Name") {
+        customers.sort((a, b) =>
+            a.firstName.toLowerCase().compareTo(b.firstName.toLowerCase()));
+      } else if (label == "Last Name") {
+        customers.sort((a, b) =>
+            a.lastName.toLowerCase().compareTo(b.lastName.toLowerCase()));
+      } else if (label == "Email") {
+        customers.sort(
+            (a, b) => a.email.toLowerCase().compareTo(b.email.toLowerCase()));
+      } else if (label == "Salary") {
+        customers.sort((a, b) => a.salary.compareTo(b.salary));
+      } else if (label == "DoB") {
+        customers.sort((a, b) => a.dob.compareTo(b.dob));
+      } else {
+        print("no such field.");
+      }
+    } else {
+      if (label == "First Name") {
+        customers.sort((a, b) =>
+            b.firstName.toLowerCase().compareTo(a.firstName.toLowerCase()));
+      } else if (label == "Last Name") {
+        customers.sort((a, b) =>
+            b.lastName.toLowerCase().compareTo(a.lastName.toLowerCase()));
+      } else if (label == "Email") {
+        customers.sort(
+            (a, b) => b.email.toLowerCase().compareTo(a.email.toLowerCase()));
+      } else if (label == "Salary") {
+        customers.sort((a, b) => b.salary.compareTo(a.salary));
+      } else if (label == "DoB") {
+        customers.sort((a, b) => b.dob.compareTo(a.dob));
+      } else {
+        print("no such field.");
+      }
+    }
+
+    notifyListeners();
+  }
+
+  void filterBySalary(int start, int end) {
+    customers = [];
+    customers = originalCopy
+        .where((element) => (element.salary >= start && element.salary <= end))
+        .toList();
+    notifyListeners();
+  }
+
+  void filterByDob(DateTime start, DateTime end) {
+    customers = [];
+    customers = originalCopy
+        .where((element) => (element.dob.compareTo(start) > 0 &&
+            element.dob.compareTo(end) < 0))
+        .toList();
+    notifyListeners();
+  }
+
+  void filterSearchResults(String query) {
+    customers = [];
+    customers = originalCopy
+        .where(
+            (item) => item.fullName.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    notifyListeners();
+  }
+
+  void resetFilters() {
+    customers = [];
+    customers.addAll(originalCopy);
+    notifyListeners();
   }
 }

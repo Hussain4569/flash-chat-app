@@ -73,7 +73,7 @@ class _CustomerEditState extends State<CustomerEdit> {
     firstName = customer.firstName;
     lastName = customer.lastName;
     email = customer.email;
-    dob = customer.DOB;
+    dob = customer.dob;
     salary = customer.salary;
     dateInput.text = DateFormat('yyyy-MM-dd').format(dob!);
 
@@ -179,7 +179,7 @@ class _CustomerEditState extends State<CustomerEdit> {
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now(),
+                        initialDate: DateTime(2001),
                         firstDate: DateTime(
                             1900), //DateTime.now() - not to allow to choose before today.
                         lastDate: DateTime(2010));
@@ -225,8 +225,9 @@ class _CustomerEditState extends State<CustomerEdit> {
                                       id: customer.id,
                                       firstName: firstName!,
                                       lastName: lastName!,
+                                      fullName: '${firstName!} ${lastName!}',
                                       email: email!,
-                                      DOB: dob!,
+                                      dob: dob!,
                                       salary: salary!),
                                   context);
                           setState(() {

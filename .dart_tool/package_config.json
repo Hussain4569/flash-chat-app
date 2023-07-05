@@ -39,19 +39,19 @@
     },
     {
       "name": "cloud_firestore",
-      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore-4.8.1",
+      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore-4.8.2",
       "packageUri": "lib/",
       "languageVersion": "2.18"
     },
     {
       "name": "cloud_firestore_platform_interface",
-      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore_platform_interface-5.15.1",
+      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore_platform_interface-5.15.2",
       "packageUri": "lib/",
       "languageVersion": "2.18"
     },
     {
       "name": "cloud_firestore_web",
-      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore_web-3.6.1",
+      "rootUri": "file:///C:/Users/Hp/AppData/Local/Pub/Cache/hosted/pub.dev/cloud_firestore_web-3.6.2",
       "packageUri": "lib/",
       "languageVersion": "2.18"
     },
@@ -278,7 +278,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2023-06-26T07:21:01.221083Z",
+  "generated": "2023-07-05T06:54:28.546422Z",
   "generator": "pub",
   "generatorVersion": "3.0.5"
 }

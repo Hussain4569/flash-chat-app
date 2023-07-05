@@ -3,11 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat/model/CustomerProvider.dart';
 import 'package:flash_chat/screens/change_password_screen.dart';
 import 'package:flash_chat/screens/customer_list.dart';
+import 'package:flash_chat/screens/pagination_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/constants.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:provider/provider.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
 
 FirebaseAuth _auth = FirebaseAuth.instance;
 FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -128,11 +128,20 @@ class _ChatScreenState extends State<ChatScreen> {
                   });
                   print("on tap reached.");
                   await Provider.of<CustomerProvider>(context, listen: false)
-                      .createCustomersList(context);
+                      .createCustomersList();
                   setState(() {
                     isLoading = false;
                   });
                   Navigator.pushNamed(context, CustomerList.id);
+                },
+              ),
+              ListTile(
+                title: const Text(
+                  'Pagination',
+                  style: TextStyle(fontSize: 20.0),
+                ),
+                onTap: () {
+                  Navigator.pushNamed(context, PaginationTest.id);
                 },
               ),
             ],

@@ -159,7 +159,7 @@ class _CustomerAddState extends State<CustomerAdd> {
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                         context: context,
-                        initialDate: DateTime.now(),
+                        initialDate: DateTime(2001),
                         firstDate: DateTime(
                             1900), //DateTime.now() - not to allow to choose before today.
                         lastDate: DateTime(2010));

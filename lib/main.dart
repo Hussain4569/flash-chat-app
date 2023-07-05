@@ -3,6 +3,7 @@ import 'package:flash_chat/screens/change_password_screen.dart';
 import 'package:flash_chat/screens/customer_add.dart';
 import 'package:flash_chat/screens/customer_edit.dart';
 import 'package:flash_chat/screens/customer_list.dart';
+import 'package:flash_chat/screens/pagination_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flash_chat/screens/welcome_screen.dart';
 import 'package:flash_chat/screens/login_screen.dart';
@@ -36,6 +37,7 @@ class FlashChat extends StatelessWidget {
           CustomerList.id: (context) => CustomerList(),
           CustomerAdd.id: (context) => CustomerAdd(),
           CustomerEdit.id: (context) => CustomerEdit(),
+          PaginationTest.id: (context) => PaginationTest(),
         },
       ),
     );

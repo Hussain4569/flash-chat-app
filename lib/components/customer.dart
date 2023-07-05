@@ -87,7 +87,7 @@ class CustomerListElement extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('DOB: ${DateFormat('yyyy-MM-dd').format(customer.DOB)}',
+                  Text('DOB: ${DateFormat('yyyy-MM-dd').format(customer.dob)}',
                       style: const TextStyle(
                           fontSize: 15.0, fontWeight: FontWeight.w300)),
                   Text('Salary: ${customer.salary}',
@@ -104,15 +104,22 @@ class CustomerListElement extends StatelessWidget {
 }
 
 class Customer {
-  String id = '', firstName = '', lastName = '', email = '';
-  DateTime DOB;
+  String id = '', firstName = '', lastName = '', fullName = '', email = '';
+  DateTime dob;
   int salary = 0;
+
+  static String fNameLabel = "firstName",
+      lNameLabel = "lastName",
+      emailLabel = "email",
+      salaryLabel = "salary",
+      dobLabel = "dob";
 
   Customer(
       {required this.id,
       required this.firstName,
       required this.lastName,
+      required this.fullName,
       required this.email,
-      required this.DOB,
+      required this.dob,
       required this.salary});
 }
