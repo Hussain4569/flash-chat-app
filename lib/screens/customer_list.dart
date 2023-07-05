@@ -3,7 +3,6 @@ import 'package:flash_chat/model/CustomerProvider.dart';
 import 'package:flash_chat/screens/customer_add.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 import 'package:provider/provider.dart';
 
 import '../components/customer.dart';
@@ -37,93 +36,117 @@ class _CustomerListState extends State<CustomerList> {
     if (controller.offset >= controller.position.maxScrollExtent &&
         !controller.position.outOfRange) {
       print("at the end of list");
-      //get next 10 customers
+      context.read<CustomerProvider>().getNextData();
     }
   }
 
   @override
   void initState() {
     super.initState();
-    //get first 10 customers
     controller.addListener(_scrollListener);
   }
 
   @override
   Widget build(BuildContext context) {
     List<Customer> customers = context.watch<CustomerProvider>().customers;
+    bool isLoading = context.watch<CustomerProvider>().isLoading;
+    bool hasMore = context.watch<CustomerProvider>().hasMore;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: null,
-        title: const Text('⚡️Customer List'),
-        backgroundColor: Colors.lightBlueAccent,
-        actions: [
-          IconButton(
-              onPressed: () {
-                print("filter button pressed");
-                focusNode.unfocus();
-                showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return FilterBottomSheet(
-                        selectedSort: selectedSort,
-                        currentRangeValues: currentRangeValues,
-                        setSelectedSort: (selected) {
-                          setState(() {
-                            selectedSort = selected;
-                          });
-                        },
-                      );
-                    });
-              },
-              icon: Icon(Icons.filter_alt)),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
+    return WillPopScope(
+      onWillPop: () {
+        Provider.of<CustomerProvider>(context, listen: false).resetAll();
+        Navigator.pop(context);
+        return Future.value(false);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: null,
+          title: const Text('⚡️Customer List'),
           backgroundColor: Colors.lightBlueAccent,
-          onPressed: () {
-            Navigator.pushNamed(context, CustomerAdd.id);
-          },
-          child: Icon(Icons.add)),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: (value) {
-                Provider.of<CustomerProvider>(context, listen: false)
-                    .filterSearchResults(value);
-                if (value.isEmpty) {
+          actions: [
+            IconButton(
+                onPressed: () {
+                  print("filter button pressed");
+                  focusNode.unfocus();
+                  showModalBottomSheet(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return FilterBottomSheet(
+                          selectedSort: selectedSort,
+                          currentRangeValues: currentRangeValues,
+                          setSelectedSort: (selected) {
+                            setState(() {
+                              selectedSort = selected;
+                            });
+                          },
+                        );
+                      });
+                },
+                icon: Icon(Icons.filter_alt)),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+            backgroundColor: Colors.lightBlueAccent,
+            onPressed: () {
+              Navigator.pushNamed(context, CustomerAdd.id);
+            },
+            child: Icon(Icons.add)),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                onChanged: (value) {
                   Provider.of<CustomerProvider>(context, listen: false)
-                      .resetFilters();
-                }
-              },
-              focusNode: focusNode,
-              controller: editingController,
-              decoration: kTextFieldDecoration.copyWith(
-                labelText: "Search",
-                hintText: "Search",
-                prefixIcon: const Icon(Icons.search),
+                      .filterSearchResults(value);
+                  if (value.isEmpty) {
+                    Provider.of<CustomerProvider>(context, listen: false)
+                        .resetFilters();
+                  }
+                },
+                focusNode: focusNode,
+                controller: editingController,
+                decoration: kTextFieldDecoration.copyWith(
+                  labelText: "Search",
+                  hintText: "Search",
+                  prefixIcon: const Icon(Icons.search),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: customers.length > 0
-                ? ListView.builder(
-                    shrinkWrap: true,
-                    controller: controller,
-                    itemBuilder: (context, idx) =>
-                        CustomerListElement(customer: customers[idx]),
-                    itemCount: customers.length,
-                  )
-                : Center(child: noResultsText),
-          ),
-          context.watch<CustomerProvider>().isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : Container(),
-        ],
+            Expanded(
+              child: customers.length > 0
+                  ? ListView.builder(
+                      shrinkWrap: true,
+                      controller: controller,
+                      itemBuilder: (context, idx) {
+                        if (idx < customers.length) {
+                          return CustomerListElement(customer: customers[idx]);
+                        } else if (hasMore) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else {
+                          return Center(
+                            child: Text('No more results'),
+                          );
+                        }
+                      },
+                      itemCount: customers.length + 1,
+                    )
+                  : Center(child: noResultsText),
+            ),
+            // isLoading
+            //     ? const Center(
+            //         child: CircularProgressIndicator(),
+            //       )
+            //     : Container(),
+            // !hasMore
+            //     ? Center(
+            //         child: Text('No more results'),
+            //       )
+            //     : Container(),
+          ],
+        ),
       ),
     );
   }
@@ -378,14 +401,4 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
       ),
     );
   }
-}
-
-//pagination testing code
-Stream<QuerySnapshot<Map<String, dynamic>>> nextPage(var last) {
-  return firestore
-      .collection('customers')
-      .orderBy("firstName")
-      .startAfter(last)
-      .limit(15)
-      .snapshots();
 }

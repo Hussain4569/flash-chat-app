@@ -11,8 +11,8 @@ class CustomerProvider extends ChangeNotifier {
   List<Customer> customers = [];
   List<Customer> originalCopy = [];
   bool isLoading = false, hasMore = true, firstFetched = false;
-  var lastVisible;
-  int docLimit = 10;
+  dynamic lastVisible;
+  final int docLimit = 10;
 
   void toggleIsLoading() {
     isLoading = !isLoading;
@@ -20,6 +20,7 @@ class CustomerProvider extends ChangeNotifier {
   }
 
   void getNextData() {
+    print("Get Next Data");
     if (!hasMore) {
       print('No More Items');
       return;
@@ -31,7 +32,10 @@ class CustomerProvider extends ChangeNotifier {
             .collection('customers')
             .orderBy("firstName")
             .startAfter([lastVisible['firstName']]).limit(docLimit);
-    if (!firstFetched) firstFetched = true;
+    if (!firstFetched) {
+      print("First Fetch");
+      firstFetched = true;
+    }
     query.get().then(
       (documentSnapshots) {
         // Get the last visible document
@@ -61,7 +65,7 @@ class CustomerProvider extends ChangeNotifier {
           );
         }).toList());
         notifyListeners();
-        if (documentSnapshots.docs.length <= docLimit) {
+        if (documentSnapshots.docs.length < docLimit) {
           hasMore = false;
         }
       },
@@ -70,32 +74,32 @@ class CustomerProvider extends ChangeNotifier {
     toggleIsLoading();
   }
 
-  Future<void> createCustomersList() async {
-    customers = [];
-    originalCopy = [];
-    toggleIsLoading();
-    await firestore.collection("customers").get().then((querySnapshot) {
-      for (var docSnapshot in querySnapshot.docs) {
-        var data = docSnapshot.data();
-        print(data);
-        print(docSnapshot.id);
-        customers.add(
-          Customer(
-            id: docSnapshot.id,
-            firstName: data['firstName'],
-            lastName: data['lastName'],
-            fullName: data['firstName'] + ' ' + data['lastName'],
-            email: data['email'],
-            dob: data['dob'].toDate(),
-            salary: data['salary'],
-          ),
-        );
-      }
-      originalCopy.addAll(customers);
-      toggleIsLoading();
-    }, onError: (e) => print(e));
-    notifyListeners();
-  }
+  // Future<void> createCustomersList() async {
+  //   customers = [];
+  //   originalCopy = [];
+  //   toggleIsLoading();
+  //   await firestore.collection("customers").get().then((querySnapshot) {
+  //     for (var docSnapshot in querySnapshot.docs) {
+  //       var data = docSnapshot.data();
+  //       print(data);
+  //       print(docSnapshot.id);
+  //       customers.add(
+  //         Customer(
+  //           id: docSnapshot.id,
+  //           firstName: data['firstName'],
+  //           lastName: data['lastName'],
+  //           fullName: data['firstName'] + ' ' + data['lastName'],
+  //           email: data['email'],
+  //           dob: data['dob'].toDate(),
+  //           salary: data['salary'],
+  //         ),
+  //       );
+  //     }
+  //     originalCopy.addAll(customers);
+  //     toggleIsLoading();
+  //   }, onError: (e) => print(e));
+  //   notifyListeners();
+  // }
 
   Future<void> addCustomer(String fN, String lN, String email, DateTime dob,
       int salary, BuildContext context) async {
@@ -212,6 +216,16 @@ class CustomerProvider extends ChangeNotifier {
   void resetFilters() {
     customers = [];
     customers.addAll(originalCopy);
+    notifyListeners();
+  }
+
+  void resetAll() {
+    isLoading = false;
+    hasMore = true;
+    firstFetched = false;
+    lastVisible = null;
+    customers = [];
+    originalCopy = [];
     notifyListeners();
   }
 }
